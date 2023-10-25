@@ -119,6 +119,10 @@ export function configWrite(key, value) {
   localConfig[key] = value;
   window.localStorage[CONFIG_KEY] = JSON.stringify(localConfig);
 
+  if (window.sponsorblock) {
+    window.sponsorblock.updateSkippableCategories();
+  }
+
   configFrags[key].dispatchEvent(
     new CustomEvent('ytafConfigChange', {
       detail: { key, newValue: value, oldValue }
