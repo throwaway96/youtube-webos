@@ -179,7 +179,9 @@ const eventHandler = (evt) => {
     evt.defaultPrevented
   );
 
-  if (getKeyColor(evt.charCode) === 'green') {
+  const keyColor = getKeyColor(evt.charCode);
+
+  if (keyColor === 'green') {
     console.info('Taking over!');
 
     evt.preventDefault();
@@ -191,6 +193,21 @@ const eventHandler = (evt) => {
     }
     return false;
   }
+
+  if (keyColor === 'red') {
+    evt.preventDefault();
+    evt.stopPropagation();
+
+    if (evt.type === 'keydown') {
+      const newValue = !configRead('enableSponsorBlock');
+      configWrite('enableSponsorBlock', newValue);
+      showNotification(
+        newValue ? 'SponsorBlock toggled on' : 'SponsorBlock toggled off'
+      );
+    }
+    return false;
+  }
+
   return true;
 };
 
@@ -279,4 +296,5 @@ initHideLogo();
 
 setTimeout(() => {
   showNotification('Press 🟩 to open YTAF configuration screen');
+  showNotification('Press 🟥 to toggle on/off SponsorBlock');
 }, 2000);

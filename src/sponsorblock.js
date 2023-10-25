@@ -428,12 +428,8 @@ window.addEventListener(
     if (needsReload) {
       uninitializeSponsorblock();
 
-      if (configRead('enableSponsorBlock')) {
-        window.sponsorblock = new SponsorBlockHandler(videoID);
-        window.sponsorblock.init();
-      } else {
-        console.info('SponsorBlock disabled, not loading');
-      }
+      window.sponsorblock = new SponsorBlockHandler(videoID);
+      window.sponsorblock.init();
     }
   },
   false
