@@ -82,6 +82,8 @@ function createUiContainer() {
 
   elmContainer.appendChild(elmBlock);
 
+  elmContainer.appendChild(createConfigCheckbox('enableTestUIFixes'));
+
   const elmSponsorLink = document.createElement('div');
   elmSponsorLink.innerHTML =
     '<small>Sponsor segments skipping - https://sponsor.ajay.app</small>';
@@ -158,3 +160,50 @@ export function showNotification(text, time = 3000) {
 setTimeout(() => {
   showNotification('Press [GREEN] to open YTAF configuration screen');
 }, 2000);
+
+function applyTestUIFixes() {
+  try {
+    window.tectonicConfig.clientData.legacyApplicationQuality =
+      'full-animation';
+    window.tectonicConfig.featureSwitches.enableAnimations = true;
+    window.tectonicConfig.featureSwitches.enableListAnimations = true;
+    window.tectonicConfig.featureSwitches.enableOnScrollLinearAnimation = true;
+    window.tectonicConfig.featureSwitches.isLimitedMemory = false;
+  } catch (e) {
+    console.error('applyTestUIFixes: error setting tectonicConfig:', e);
+  }
+
+  try {
+    const bodyClasses = document.body.classList;
+
+    const observer = new MutationObserver(function bodyClassCallback(
+      _records,
+      _observer
+    ) {
+      try {
+        if (bodyClasses.contains('app-quality-root')) {
+          bodyClasses.remove('app-quality-root');
+        }
+      } catch (e) {
+        console.error('error in <body> class observer callback:', e);
+      }
+    });
+
+    observer.observe(document.body, {
+      subtree: false,
+      childList: false,
+      attributes: true,
+      attributeFilter: ['class'],
+      characterData: false
+    });
+  } catch (e) {
+    console.error(
+      'applyTestUIFixes: error setting up <body> class observer:',
+      e
+    );
+  }
+}
+
+if (configRead('enableTestUIFixes')) {
+  applyTestUIFixes();
+}

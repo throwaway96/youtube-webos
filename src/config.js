@@ -17,7 +17,8 @@ export const configOptions = {
   enableSponsorBlockMusicOfftopic: {
     default: true,
     desc: 'Skip music and off-topic segments'
-  }
+  },
+  enableTestUIFixes: { default: false, desc: '(TEST) Enable UI fixes' }
 };
 
 const defaultConfig = (() => {
