@@ -1,26 +1,69 @@
 const CONFIG_KEY = 'ytaf-configuration';
-const defaultConfig = {
-  enableAdBlock: true,
-  enableSponsorBlock: true,
-  enableSponsorBlockSponsor: true,
-  enableSponsorBlockIntro: true,
-  enableSponsorBlockOutro: true,
-  enableSponsorBlockInteraction: true,
-  enableSponsorBlockSelfPromo: true,
-  enableSponsorBlockMusicOfftopic: true,
-  enableTestUIFix: false
+
+export const configOptions = {
+  enableAdBlock: { default: true, desc: 'Enable ad blocking' },
+  enableSponsorBlock: { default: true, desc: 'Enable SponsorBlock' },
+  enableSponsorBlockSponsor: { default: true, desc: 'Skip sponsor segments' },
+  enableSponsorBlockIntro: { default: true, desc: 'Skip intro segments' },
+  enableSponsorBlockOutro: { default: true, desc: 'Skip outro segments' },
+  enableSponsorBlockInteraction: {
+    default: true,
+    desc: 'Skip interaction reminder segments'
+  },
+  enableSponsorBlockSelfPromo: {
+    default: true,
+    desc: 'Skip self promotion segments'
+  },
+  enableSponsorBlockMusicOfftopic: {
+    default: true,
+    desc: 'Skip music and off-topic segments'
+  }
 };
 
-let localConfig;
+const defaultConfig = (() => {
+  let ret = {};
+  for (const k of Object.keys(configOptions)) {
+    ret[k] = configOptions[k].default;
+  }
+  return ret;
+})();
 
-try {
-  localConfig = JSON.parse(window.localStorage[CONFIG_KEY]);
-} catch (err) {
-  console.warn('Config read failed:', err);
-  localConfig = defaultConfig;
+function loadStoredConfig() {
+  const storage = window.localStorage.getItem(CONFIG_KEY);
+
+  if (storage === null) {
+    console.info('Config not set; using defaults.');
+    return null;
+  }
+
+  try {
+    return JSON.parse(storage);
+  } catch (err) {
+    console.warn('Error parsing stored config:', err);
+    return null;
+  }
+}
+
+// Use defaultConfig as a prototype so writes to localConfig don't change it.
+let localConfig = loadStoredConfig() ?? Object.create(defaultConfig);
+
+function configExists(key) {
+  return Object.prototype.hasOwnProperty.call(configOptions, key);
+}
+
+export function getConfigDesc(key) {
+  if (!configExists(key)) {
+    throw new Error('tried to get desc for unknown config key:', key);
+  }
+
+  return configOptions[key].desc;
 }
 
 export function configRead(key) {
+  if (!configExists(key)) {
+    throw new Error('tried to read unknown config key:', key);
+  }
+
   if (localConfig[key] === undefined) {
     console.warn(
       'Populating key',
@@ -28,6 +71,7 @@ export function configRead(key) {
       'with default value',
       defaultConfig[key]
     );
+
     localConfig[key] = defaultConfig[key];
   }
 
@@ -35,6 +79,10 @@ export function configRead(key) {
 }
 
 export function configWrite(key, value) {
+  if (!configExists(key)) {
+    throw new Error('tried to write unknown config key:', key);
+  }
+
   console.info('Setting key', key, 'to', value);
   localConfig[key] = value;
   window.localStorage[CONFIG_KEY] = JSON.stringify(localConfig);
