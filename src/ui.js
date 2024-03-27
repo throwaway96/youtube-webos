@@ -46,8 +46,26 @@ function createConfigCheckbox(key) {
   const elmInput = document.createElement('input');
   elmInput.type = 'checkbox';
   elmInput.checked = configRead(key);
-  elmInput.addEventListener('change', (evt) => {
+
+  /** @type {(evt: Event) => void} */
+  const changeHandler = (evt) => {
+    console.log('[ENTRY] checkbox handler for ' + key);
+
+    elmInput.removeEventListener('change', changeHandler);
     configWrite(key, evt.target.checked);
+    elmInput.addEventListener('change', changeHandler);
+
+    console.log('[EXIT] checkbox handler for ' + key);
+  };
+
+  elmInput.addEventListener('change', changeHandler);
+
+  configAddChangeListener(key, (evt) => {
+    console.log('[ENTRY] config change handler for ' + key);
+
+    elmInput.checked = evt.detail.newValue;
+
+    console.log('[EXIT] config change handler for ' + key);
   });
 
   const elmLabel = document.createElement('label');
