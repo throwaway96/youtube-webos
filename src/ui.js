@@ -2,6 +2,7 @@
 import './spatial-navigation-polyfill.js';
 import './ui.css';
 import { configRead, configWrite, getConfigDesc } from './config.js';
+import { waitForChildAdd } from './utils.js';
 
 // We handle key events ourselves.
 window.__spatialNavigation__.keyMode = 'NONE';
@@ -119,6 +120,8 @@ function createOptionsPanel() {
     '<small>Sponsor segments skipping - https://sponsor.ajay.app</small>';
   elmContainer.appendChild(elmSponsorLink);
 
+  elmContainer.appendChild(createConfigCheckbox('hideLogo'));
+
   return elmContainer;
 }
 
@@ -204,9 +207,17 @@ export function showNotification(text, time = 3000) {
   }, time);
 }
 
-setTimeout(() => {
-  showNotification('Press [GREEN] to open YTAF configuration screen');
-}, 2000);
+// Hide youtube logo from the top right
+async function logoHideShow() {
+  const logo = await waitForChildAdd(
+    document.getElementById('container'),
+    (node) => node.nodeName === 'YTLR-REDUX-CONNECT-YTLR-LOGO-ENTITY'
+  );
+
+  console.debug('got logo element');
+
+  logo.style.opacity = configRead('hideLogo') ? '0' : '1';
+}
 
 function applyUIFixes() {
   try {
@@ -249,3 +260,8 @@ function applyUIFixes() {
 }
 
 applyUIFixes();
+logoHideShow();
+
+setTimeout(() => {
+  showNotification('Press [GREEN] to open YTAF configuration screen');
+}, 2000);
