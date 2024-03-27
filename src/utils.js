@@ -99,14 +99,6 @@ export async function waitForChildAdd(parent, predicate, abortSignal) {
     const obs = new MutationObserver((mutations) => {
       for (const mut of mutations) {
         switch (mut.type) {
-          case 'attributes': {
-            if (predicate(mut.target)) {
-              obs.disconnect();
-              resolve(mut.target);
-              return;
-            }
-            break;
-          }
           case 'childList': {
             for (const node of mut.addedNodes) {
               if (predicate(node)) {
@@ -128,6 +120,6 @@ export async function waitForChildAdd(parent, predicate, abortSignal) {
       });
     }
 
-    obs.observe(parent, { subtree: true, attributes: true, childList: true });
+    obs.observe(parent, { subtree: true, childList: true });
   });
 }
