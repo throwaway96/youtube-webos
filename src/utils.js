@@ -87,14 +87,22 @@ export function handleLaunch(params) {
 }
 
 /**
- * Wait for a child element to be added that holds true for a predicate
+ * Wait for a child element to be added for which a predicate is true.
+ *
+ * Note that by default, the predicate is checked only when the node is added.
+ * If you want the predicate to run every time an attribute is modified, set
+ * `options.checkAttrs` to true.
  * @template T
  * @param {Element} parent
- * @param {(node: Node) => node is T} predicate
- * @param {AbortSignal=} abortSignal
+ * @param {(node: Node) => node is T} predicate Function that checks whether its argument is the desired element
+ * @param {Object=} options
+ * @param {AbortSignal=} options.abortSignal Signal that can be used to stop waiting
+ * @param {boolean} [options.checkAttrs=false] Also run predicate on attribute changes
  * @return {Promise<T>}
  */
-export async function waitForChildAdd(parent, predicate, abortSignal) {
+export async function waitForChildAdd(parent, predicate, options) {
+  const { abortSignal, checkAttrs = false } = options ?? {};
+
   return new Promise((resolve, reject) => {
     const obs = new MutationObserver((mutations) => {
       for (const mut of mutations) {
@@ -128,6 +136,10 @@ export async function waitForChildAdd(parent, predicate, abortSignal) {
       });
     }
 
-    obs.observe(parent, { subtree: true, attributes: true, childList: true });
+    obs.observe(parent, {
+      subtree: true,
+      attributes: checkAttrs,
+      childList: true
+    });
   });
 }
