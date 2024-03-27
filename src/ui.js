@@ -119,6 +119,8 @@ function createOptionsPanel() {
     '<small>Sponsor segments skipping - https://sponsor.ajay.app</small>';
   elmContainer.appendChild(elmSponsorLink);
 
+  elmContainer.appendChild(createConfigCheckbox('hideLogo'));
+
   return elmContainer;
 }
 
@@ -204,9 +206,11 @@ export function showNotification(text, time = 3000) {
   }, time);
 }
 
-setTimeout(() => {
-  showNotification('Press [GREEN] to open YTAF configuration screen');
-}, 2000);
+// Hide youtube logo from the top right
+function logoHideShow() {
+  document.querySelector('ytlr-redux-connect-ytlr-logo-entity').style.opacity =
+    configRead('hideLogo') ? '0' : '1';
+}
 
 function applyUIFixes() {
   try {
@@ -249,3 +253,13 @@ function applyUIFixes() {
 }
 
 applyUIFixes();
+logoHideShow();
+
+setTimeout(() => {
+  showNotification('Press [GREEN] to open YTAF configuration screen');
+  logoHideShow();
+}, 2000);
+
+setTimeout(() => {
+  logoHideShow();
+}, 4000);
