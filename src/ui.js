@@ -221,17 +221,6 @@ async function logoHideShow() {
 
 function applyUIFixes() {
   try {
-    const tc = window.tectonicConfig;
-    tc.clientData.legacyApplicationQuality = 'full-animation';
-    tc.featureSwitches.enableAnimations = true;
-    tc.featureSwitches.enableListAnimations = true;
-    tc.featureSwitches.enableOnScrollLinearAnimation = true;
-    tc.featureSwitches.isLimitedMemory = false;
-  } catch (e) {
-    console.error('error setting tectonicConfig:', e);
-  }
-
-  try {
     const bodyClasses = document.body.classList;
 
     const observer = new MutationObserver(function bodyClassCallback(
