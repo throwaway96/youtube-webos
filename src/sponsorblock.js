@@ -44,12 +44,9 @@ class SponsorBlockHandler {
 
   attachVideoTimeout = null;
   nextSkipTimeout = null;
-
-  slider = null;
   sliderInterval = null;
-  sliderObserver = null;
-  sliderSegmentsOverlay = null;
 
+  observer = null;
   scheduleSkipHandler = null;
   durationChangeHandler = null;
   segments = null;
@@ -137,7 +134,7 @@ class SponsorBlockHandler {
   }
 
   buildOverlay() {
-    if (this.sliderSegmentsOverlay) {
+    if (this.segmentsoverlay) {
       console.info('Overlay already built');
       return;
     }
@@ -149,7 +146,7 @@ class SponsorBlockHandler {
 
     const videoDuration = this.video.duration;
 
-    this.sliderSegmentsOverlay = document.createElement('div');
+    this.segmentsoverlay = document.createElement('div');
     this.segments.forEach((segment) => {
       const [start, end] = segment.segment;
       const barType = barTypes[segment.category] || {
@@ -161,107 +158,37 @@ class SponsorBlockHandler {
       }%) scaleX(${(end - start) / videoDuration})`;
       const elm = document.createElement('div');
       elm.classList.add('ytlr-progress-bar__played');
-      elm.style['background-color'] = barType.color;
+      elm.style['background'] = barType.color;
       elm.style['opacity'] = barType.opacity;
       elm.style['-webkit-transform'] = transform;
       console.info('Generated element', elm, 'from', segment, transform);
-      this.sliderSegmentsOverlay.appendChild(elm);
+      this.segmentsoverlay.appendChild(elm);
     });
 
-    const getSliderType = () => {
-      if (!this.slider) {
-        return null;
-      }
-
-      return this.slider.classList.contains(
-        'ytlr-multi-markers-player-bar-renderer'
-      )
-        ? 'multi-markers-player-bar'
-        : 'progress-bar';
-    };
-
-    const addSliderObserver = () => {
-      this.sliderObserver.observe(this.slider.parentNode, {
-        childList: true,
-        subtree: true
-      });
-    };
-
-    const addSliderOverlay = () => {
-      const sliderType = getSliderType();
-
-      // remove all styles from overlay
-      this.sliderSegmentsOverlay.removeAttribute('style');
-      this.sliderSegmentsOverlay.className = '';
-
-      switch (sliderType) {
-        case 'multi-markers-player-bar':
-          if (this.slider.parentNode) {
-            this.sliderSegmentsOverlay.style.top = '1.5rem';
-            this.sliderSegmentsOverlay.classList.add(
-              'ytlr-multi-markers-player-bar-renderer'
-            );
-            this.sliderSegmentsOverlay.classList.add(
-              'ytlr-multi-markers-player-bar-renderer__slider'
-            );
-
-            // add overlay just before playhead, so
-            // it is between the chapter layer and playhead
-            this.slider.parentNode.insertBefore(
-              this.sliderSegmentsOverlay,
-              document.querySelector('.ytlr-playhead')
-            );
-          } else {
-            console.info('slider without parent? video must have ended.');
-          }
-          break;
-
-        case 'progress-bar':
-          this.slider.appendChild(this.sliderSegmentsOverlay);
-          break;
-
-        default:
-          console.info('unknown slider type');
-          break;
-      }
-    };
-
-    const watchForSlider = () => {
-      if (this.sliderInterval) clearInterval(this.sliderInterval);
-
-      this.sliderInterval = setInterval(() => {
-        this.slider = document.querySelector(
-          '.ytlr-progress-bar__slider, .ytlr-multi-markers-player-bar-renderer'
-        );
-        if (this.slider) {
-          console.info('slider found...', this.slider);
-          clearInterval(this.sliderInterval);
-          this.sliderInterval = null;
-          addSliderObserver();
-          addSliderOverlay();
-        }
-      }, 100);
-    };
-
-    this.sliderObserver = new MutationObserver((mutations) => {
+    this.observer = new MutationObserver((mutations) => {
       mutations.forEach((m) => {
         if (m.removedNodes) {
           for (const node of m.removedNodes) {
-            if (node === this.sliderSegmentsOverlay) {
+            if (node === this.segmentsoverlay) {
               console.info('bringing back segments overlay');
-              addSliderOverlay();
-            }
-            if (node === this.slider) {
-              console.info('slider removed, watching again');
-              this.sliderObserver.disconnect();
-              watchForSlider();
+              this.slider.appendChild(this.segmentsoverlay);
             }
           }
         }
       });
     });
 
-    watchForSlider();
+    this.sliderInterval = setInterval(() => {
+      this.slider = document.querySelector('.ytlr-progress-bar__slider');
+      if (this.slider) {
+        clearInterval(this.sliderInterval);
+        this.sliderInterval = null;
+        this.observer.observe(this.slider, {
+          childList: true
+        });
+        this.slider.appendChild(this.segmentsoverlay);
+      }
+    }, 500);
   }
 
   scheduleSkip() {
@@ -346,14 +273,14 @@ class SponsorBlockHandler {
       this.sliderInterval = null;
     }
 
-    if (this.sliderObserver) {
-      this.sliderObserver.disconnect();
-      this.sliderObserver = null;
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
     }
 
-    if (this.sliderSegmentsOverlay) {
-      this.sliderSegmentsOverlay.remove();
-      this.sliderSegmentsOverlay = null;
+    if (this.segmentsoverlay) {
+      this.segmentsoverlay.remove();
+      this.segmentsoverlay = null;
     }
 
     if (this.video) {
