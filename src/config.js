@@ -42,6 +42,14 @@ const configOptions = new Map([
       desc: 'Skip recaps and previews'
     }
   ],
+  ['enableSponsorBlockHook', { default: false, desc: 'Skip hook segments' }],
+  [
+    'enableSponsorBlockFiller',
+    {
+      default: false,
+      desc: 'Skip filler segments'
+    }
+  ],
   [
     'hideLogo',
     {

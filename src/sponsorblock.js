@@ -2,43 +2,23 @@ import sha256 from 'tiny-sha256';
 import { configRead } from './config';
 import { showNotification } from './ui';
 
-// Copied from https://github.com/ajayyy/SponsorBlock/blob/9392d16617d2d48abb6125c00e2ff6042cb7bebe/src/config.ts#L179-L233
+// Adapted from:
+// https://github.com/ajayyy/SponsorBlock/blob/94a7b2ec4eb8b315de629a560e1be11b0ccef526/src/config.ts#L495-L588
 const barTypes = {
-  sponsor: {
-    color: '#00d400',
-    opacity: '0.7',
-    name: 'sponsored segment'
-  },
-  intro: {
-    color: '#00ffff',
-    opacity: '0.7',
-    name: 'intro'
-  },
-  outro: {
-    color: '#0202ed',
-    opacity: '0.7',
-    name: 'outro'
-  },
-  interaction: {
-    color: '#cc00ff',
-    opacity: '0.7',
-    name: 'interaction reminder'
-  },
-  selfpromo: {
-    color: '#ffff00',
-    opacity: '0.7',
-    name: 'self-promotion'
-  },
-  music_offtopic: {
-    color: '#ff9900',
-    opacity: '0.7',
-    name: 'non-music part'
-  },
-  preview: {
-    color: '#008fd6',
-    opacity: '0.7',
-    name: 'recap or preview'
-  }
+  sponsor: { color: '#00d400', name: 'sponsored segment' },
+  selfpromo: { color: '#ffff00', name: 'self-promotion' },
+  // TODO: support blocking entire videos?
+  // exclusive_access: { color: '#008a5c', name: 'free or subsidised access' },
+  interaction: { color: '#cc00ff', name: 'interaction reminder' },
+  intro: { color: '#00ffff', name: 'intro' },
+  outro: { color: '#0202ed', name: 'outro' },
+  preview: { color: '#008fd6', name: 'recap or preview' },
+  hook: { color: '#395699', name: 'hook or greeting' },
+  music_offtopic: { color: '#ff9900', name: 'non-music part' },
+  // TODO: add point of interest support
+  // see https://wiki.sponsor.ajay.app/w/Highlight
+  // poi_highlight: { color: '#ff1684' },
+  filler: { color: '#7300ff', name: 'tangents or jokes' }
 };
 
 const sponsorblockAPI = 'https://sponsorblock.inf.re/api';
@@ -66,18 +46,9 @@ class SponsorBlockHandler {
 
   async init() {
     const videoHash = sha256(this.videoID).substring(0, 4);
-    const categories = [
-      'sponsor',
-      'intro',
-      'outro',
-      'interaction',
-      'selfpromo',
-      'music_offtopic',
-      'preview'
-    ];
     const resp = await fetch(
       `${sponsorblockAPI}/skipSegments/${videoHash}?categories=${encodeURIComponent(
-        JSON.stringify(categories)
+        JSON.stringify(barTypes.keys())
       )}`
     );
     const results = await resp.json();
@@ -122,6 +93,12 @@ class SponsorBlockHandler {
     }
     if (configRead('enableSponsorBlockPreview')) {
       skippableCategories.push('preview');
+    }
+    if (configRead('enableSponsorBlockHook')) {
+      skippableCategories.push('hook');
+    }
+    if (configRead('enableSponsorBlockFiller')) {
+      skippableCategories.push('filler');
     }
     return skippableCategories;
   }
